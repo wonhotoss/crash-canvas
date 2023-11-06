@@ -28,10 +28,20 @@ const WINDOW_HEIGHT_MIN_MAG = 10;
 const RESOLUTION = 100;
 const FPS = 60;
 function get_canvas_xy(window_width_sec, window_height_mag, sec, mag) {
+    // : {x: number, y: number, xy: [number, number]}{
+    let x = MARGIN + (width - MARGIN * 2) * sec / window_width_sec;
+    let y = MARGIN + (height - MARGIN * 2) * (1 - mag / window_height_mag);
     return {
-        x: MARGIN + (width - MARGIN * 2) * sec / window_width_sec,
-        y: MARGIN + (height - MARGIN * 2) * (1 - mag / window_height_mag),
+        x,
+        y,
+        xy: [x, y]
     };
+    // return Object.assign([x, y] as [number, number], {x, y});
+    // return [x, y];
+    // return {
+    //     x: MARGIN + (width - MARGIN * 2) * sec / window_width_sec,
+    //     y: MARGIN + (height - MARGIN * 2) * (1 - mag / window_height_mag),
+    // }
 }
 function repeat_tick(game) {
     if (game.id == current_game.id) {
@@ -53,8 +63,7 @@ function repeat_tick(game) {
         ;
         let xmax01 = elapsed_sec / window_width_sec;
         ctx.beginPath();
-        let p0 = get_canvas_xy(window_width_sec, window_height_mag, 0, 0);
-        ctx.moveTo(p0.x, p0.y);
+        ctx.moveTo(...get_canvas_xy(window_width_sec, window_height_mag, 0, 0).xy);
         // let x01 = 0;
         // let x = 0;
         let sec = 0;
@@ -79,6 +88,35 @@ function repeat_tick(game) {
         ctx.fillStyle = gradient;
         ctx.fill();
         // console.log('1');
+        let line_points0 = [];
+        let line_points1 = [];
+        for (let i = 0; i < points.length - 1; ++i) {
+            let p0 = points[i];
+            let p1 = points[i + 1];
+            let diff = { x: p1.x - p0.x, y: p1.y - p0.y };
+            line_points0.push({
+                x: p0.x + -diff.y,
+                y: p0.y + diff.x,
+            });
+            line_points1.unshift({
+                x: p0.x + diff.y,
+                y: p0.y + -diff.x,
+            });
+        }
+        ctx.beginPath();
+        ctx.moveTo(...get_canvas_xy(window_width_sec, window_height_mag, 0, 0).xy);
+        for (let p of line_points0) {
+            ctx.lineTo(p.x, p.y);
+        }
+        for (let p of line_points1) {
+            ctx.lineTo(p.x, p.y);
+        }
+        ctx.closePath();
+        const line_gradient = ctx.createLinearGradient(0, height, width, 0);
+        line_gradient.addColorStop(0, "white");
+        line_gradient.addColorStop(1, "purple");
+        ctx.fillStyle = line_gradient;
+        ctx.fill();
         // requestAnimationFrame(() => repeat_tick(game));
         setTimeout(() => repeat_tick(game), 1000 / FPS);
     }
