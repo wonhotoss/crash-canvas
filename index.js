@@ -27,7 +27,10 @@ const WINDOW_WIDTH_MIN_SEC = 2;
 const WINDOW_HEIGHT_MIN_MAG = 10;
 const RESOLUTION = 100;
 const FPS = 60;
-function get_canvas_xy(window_width_sec, window_height_mag, sec, mag) {
+const RULER_TICK_LENGTH = 10;
+let window_width_sec = 1;
+let window_height_mag = 1;
+function get_canvas_xy(sec, mag) {
     // : {x: number, y: number, xy: [number, number]}{
     let x = MARGIN + (width - MARGIN * 2) * sec / window_width_sec;
     let y = MARGIN + (height - MARGIN * 2) * (1 - mag / window_height_mag);
@@ -42,6 +45,38 @@ function get_canvas_xy(window_width_sec, window_height_mag, sec, mag) {
     //     x: MARGIN + (width - MARGIN * 2) * sec / window_width_sec,
     //     y: MARGIN + (height - MARGIN * 2) * (1 - mag / window_height_mag),
     // }
+}
+function xline(sec, mag, length) {
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "grey";
+    ctx.beginPath();
+    let center = get_canvas_xy(sec, mag);
+    ctx.moveTo(center.x, center.y);
+    ctx.lineTo(center.x + length, center.y);
+    ctx.stroke();
+}
+function yline(sec, mag, length) {
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "grey";
+    ctx.beginPath();
+    let center = get_canvas_xy(sec, mag);
+    ctx.moveTo(center.x, center.y);
+    ctx.lineTo(center.x, center.y + length);
+    ctx.stroke();
+}
+function text(s, sec, mag, xoffset, yoffset) {
+    let center = get_canvas_xy(sec, mag);
+    ctx.fillText(s.toString(), center.x + xoffset, center.y + yoffset);
+}
+function get_ruler_unit(x) {
+    // find first number
+    let floored_log10 = Math.floor(Math.log10(x));
+    let unit = Math.pow(10, floored_log10);
+    let first_digit = Math.floor(x / unit);
+    if (first_digit < 5) {
+        unit /= 2;
+    }
+    return unit;
 }
 function repeat_tick(game) {
     if (game.id == current_game.id) {
@@ -58,12 +93,12 @@ function repeat_tick(game) {
         // lamp   
         let elapsed_sec = (Date.now() - game.start_at_ms) / 1000;
         // console.log(elapsed_sec);
-        let window_width_sec = Math.max(WINDOW_WIDTH_MIN_SEC, elapsed_sec);
-        let window_height_mag = Math.max(WINDOW_HEIGHT_MIN_MAG, estimate_mag(window_width_sec));
+        window_width_sec = Math.max(WINDOW_WIDTH_MIN_SEC, elapsed_sec);
+        window_height_mag = Math.max(WINDOW_HEIGHT_MIN_MAG, estimate_mag(window_width_sec));
         ;
         let xmax01 = elapsed_sec / window_width_sec;
         ctx.beginPath();
-        ctx.moveTo(...get_canvas_xy(window_width_sec, window_height_mag, 0, 0).xy);
+        ctx.moveTo(...get_canvas_xy(0, 0).xy);
         // let x01 = 0;
         // let x = 0;
         let sec = 0;
@@ -74,13 +109,12 @@ function repeat_tick(game) {
             // x = width * x01;
             // let height01 = Math.pow(x01, power);
             // let y = height * (1 - height01);
-            points.push(get_canvas_xy(window_width_sec, window_height_mag, sec, mag));
+            points.push(get_canvas_xy(sec, mag));
         }
         for (let p of points) {
             ctx.lineTo(p.x, p.y);
         }
-        let p1 = get_canvas_xy(window_width_sec, window_height_mag, elapsed_sec, 0);
-        ctx.lineTo(p1.x, p1.y);
+        ctx.lineTo(...get_canvas_xy(elapsed_sec, 0).xy);
         ctx.closePath();
         const gradient = ctx.createLinearGradient(0, height, width, 0);
         gradient.addColorStop(0, "black");
@@ -104,7 +138,7 @@ function repeat_tick(game) {
             });
         }
         ctx.beginPath();
-        ctx.moveTo(...get_canvas_xy(window_width_sec, window_height_mag, 0, 0).xy);
+        ctx.moveTo(...get_canvas_xy(0, 0).xy);
         for (let p of line_points0) {
             ctx.lineTo(p.x, p.y);
         }
@@ -113,10 +147,32 @@ function repeat_tick(game) {
         }
         ctx.closePath();
         const line_gradient = ctx.createLinearGradient(0, height, width, 0);
-        line_gradient.addColorStop(0, "white");
-        line_gradient.addColorStop(1, "purple");
+        line_gradient.addColorStop(1, "white");
+        line_gradient.addColorStop(0, "purple");
         ctx.fillStyle = line_gradient;
         ctx.fill();
+        ctx.beginPath();
+        let tip = points[points.length - 1];
+        ctx.arc(tip.x, tip.y, 25, 0, 2 * Math.PI);
+        ctx.fillStyle = 'white';
+        ctx.fill();
+        // ruler
+        ctx.font = "10px serif";
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'right';
+        yline(0, 0, -(height - MARGIN * 2));
+        let mag_unit = get_ruler_unit(window_height_mag);
+        for (let mag = mag_unit; mag < window_height_mag; mag += mag_unit) {
+            xline(0, mag, -RULER_TICK_LENGTH);
+            text(mag.toString(), 0, mag, -RULER_TICK_LENGTH, 0);
+        }
+        ctx.textAlign = 'center';
+        xline(0, 0, width - MARGIN * 2);
+        let sec_unit = get_ruler_unit(window_width_sec);
+        for (let sec = sec_unit; sec < window_width_sec; sec += sec_unit) {
+            yline(sec, 0, RULER_TICK_LENGTH);
+            text(sec.toString(), sec, 0, 0, RULER_TICK_LENGTH);
+        }
         // requestAnimationFrame(() => repeat_tick(game));
         setTimeout(() => repeat_tick(game), 1000 / FPS);
     }
