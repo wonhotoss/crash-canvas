@@ -2,13 +2,32 @@ type game = {
     id: number,
     start_at_ms: number,
     end_at_x: number,
+    evacuator_idx: number,
+    evacuators: {
+        name: string,
+        sec_at: number,
+        mag_at: number,
+        sec_v: number,
+        mag_v: number,
+    }[],
 };
 
-let current_game = {
+let current_game: game = {
     id: 0,
     start_at_ms: Date.now(),
     end_at_x: 0,
+    evacuator_idx: 0,
+    evacuators: [],
 }
+
+const MARGIN = 100;
+const WINDOW_WIDTH_MIN_SEC = 2;
+const WINDOW_HEIGHT_MIN_MAG = 10;
+const RESOLUTION = 100;
+const FPS = 60;
+const RULER_TICK_LENGTH = 10;
+const EVACUATOR_LIFETIME_SEC = 5;
+const MAG_GRAVITY = -1;
 
 let target = document.getElementById("main-canvas") as HTMLCanvasElement;
 var ctx: CanvasRenderingContext2D = target.getContext('2d') as CanvasRenderingContext2D;
@@ -20,9 +39,31 @@ function start_game(){
         id: current_game.id + 1,
         start_at_ms: Date.now(),
         end_at_x: 0,
+        evacuator_idx: 0,
+        evacuators: [],
     };
 
     repeat_tick(current_game);
+    repeat_request_dummy_exit(current_game);
+}
+
+function repeat_request_dummy_exit(game: game){    
+    if(game.id == current_game.id){
+        let elapsed_sec = (Date.now() - game.start_at_ms) / 1000;
+        while(game.evacuators.length && game.evacuators[0].sec_at + EVACUATOR_LIFETIME_SEC < elapsed_sec){
+            game.evacuators.shift();
+        }
+
+        game.evacuators.push({
+            name: `evacuator #${game.evacuator_idx++}`,
+            sec_at: elapsed_sec,
+            mag_at: estimate_mag(elapsed_sec),
+            sec_v: Math.random() - 0.5,
+            mag_v: Math.random(),
+        });
+
+        setTimeout(() => repeat_request_dummy_exit(game), 500);
+    }
 }
 
 function end_game(x: number){
@@ -33,12 +74,6 @@ function estimate_mag(elapsed_sec: number){
     return Math.pow(elapsed_sec, 2);
 }
 
-const MARGIN = 100;
-const WINDOW_WIDTH_MIN_SEC = 2;
-const WINDOW_HEIGHT_MIN_MAG = 10;
-const RESOLUTION = 100;
-const FPS = 60;
-const RULER_TICK_LENGTH = 10;
 
 let window_width_sec = 1;
 let window_height_mag = 1;
@@ -209,6 +244,17 @@ function repeat_tick(game: game){
             text(sec.toString(), sec, 0, 0, RULER_TICK_LENGTH);
         }
 
+        let last_alpha = ctx.globalAlpha;
+
+        for(let evacuator of game.evacuators){
+            let elapsed_after_evacuate_sec = elapsed_sec - evacuator.sec_at;
+            let sec = evacuator.sec_at + evacuator.sec_v * elapsed_after_evacuate_sec;
+            let mag = evacuator.mag_at + evacuator.mag_v * elapsed_after_evacuate_sec + 0.5 * MAG_GRAVITY * elapsed_after_evacuate_sec * elapsed_after_evacuate_sec;            
+            ctx.globalAlpha = 1 - Math.min(1, (elapsed_after_evacuate_sec / EVACUATOR_LIFETIME_SEC));
+            text(evacuator.name, sec, mag, 0, 0);
+        }
+
+        ctx.globalAlpha = last_alpha;
 
         // requestAnimationFrame(() => repeat_tick(game));
         setTimeout(() => repeat_tick(game), 1000 / FPS);
