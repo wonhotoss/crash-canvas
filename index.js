@@ -2,7 +2,7 @@
 let current_game = {
     id: 0,
     start_at_ms: Date.now(),
-    end_at_x: 0,
+    end_at_sec: 0,
     evacuator_idx: 0,
     evacuators: [],
 };
@@ -22,7 +22,7 @@ function start_game() {
     current_game = {
         id: current_game.id + 1,
         start_at_ms: Date.now(),
-        end_at_x: 0,
+        end_at_sec: 0,
         evacuator_idx: 0,
         evacuators: [],
     };
@@ -35,18 +35,22 @@ function repeat_request_dummy_exit(game) {
         while (game.evacuators.length && game.evacuators[0].sec_at + EVACUATOR_LIFETIME_SEC < elapsed_sec) {
             game.evacuators.shift();
         }
-        game.evacuators.push({
-            name: `evacuator #${game.evacuator_idx++}`,
-            sec_at: elapsed_sec,
-            mag_at: estimate_mag(elapsed_sec),
-            sec_v: Math.random() - 0.5,
-            mag_v: Math.random(),
-        });
+        if (!current_game.end_at_sec) {
+            game.evacuators.push({
+                name: `evacuator #${game.evacuator_idx++}`,
+                sec_at: elapsed_sec,
+                mag_at: estimate_mag(elapsed_sec),
+                sec_v: Math.random() - 0.5,
+                mag_v: Math.random(),
+            });
+        }
         setTimeout(() => repeat_request_dummy_exit(game), 500);
     }
 }
 function end_game(x) {
-    current_game.end_at_x = x;
+    if (!current_game.end_at_sec) {
+        current_game.end_at_sec = (Date.now() - current_game.start_at_ms) / 1000;
+    }
 }
 function estimate_mag(elapsed_sec) {
     return Math.pow(elapsed_sec, 2);
@@ -96,35 +100,23 @@ function get_ruler_unit(x) {
 }
 function repeat_tick(game) {
     if (game.id == current_game.id) {
-        // render
         // clear
         ctx.clearRect(0, 0, width, height);
         ctx.rect(0, 0, width, height);
         ctx.fillStyle = 'black';
         ctx.fill();
-        // if(!game.end_at_x){            
-        // }
-        // else{
-        // }
         // lamp   
-        let elapsed_sec = (Date.now() - game.start_at_ms) / 1000;
-        // console.log(elapsed_sec);
+        let elapsed_sec = current_game.end_at_sec || (Date.now() - game.start_at_ms) / 1000;
         window_width_sec = Math.max(WINDOW_WIDTH_MIN_SEC, elapsed_sec);
         window_height_mag = Math.max(WINDOW_HEIGHT_MIN_MAG, estimate_mag(window_width_sec));
         ;
-        let xmax01 = elapsed_sec / window_width_sec;
         ctx.beginPath();
         ctx.moveTo(...get_canvas_xy(0, 0).xy);
-        // let x01 = 0;
-        // let x = 0;
         let sec = 0;
         let points = [];
         for (let i = 0; i < RESOLUTION && sec <= elapsed_sec; ++i) {
             sec = elapsed_sec / RESOLUTION * i;
             let mag = estimate_mag(sec);
-            // x = width * x01;
-            // let height01 = Math.pow(x01, power);
-            // let y = height * (1 - height01);
             points.push(get_canvas_xy(sec, mag));
         }
         for (let p of points) {
@@ -134,10 +126,9 @@ function repeat_tick(game) {
         ctx.closePath();
         const gradient = ctx.createLinearGradient(0, height, width, 0);
         gradient.addColorStop(0, "black");
-        gradient.addColorStop(1, "purple");
+        gradient.addColorStop(1, current_game.end_at_sec ? "gray" : "purple");
         ctx.fillStyle = gradient;
         ctx.fill();
-        // console.log('1');
         let line_points0 = [];
         let line_points1 = [];
         for (let i = 0; i < points.length - 1; ++i) {
@@ -164,7 +155,7 @@ function repeat_tick(game) {
         ctx.closePath();
         const line_gradient = ctx.createLinearGradient(0, height, width, 0);
         line_gradient.addColorStop(1, "white");
-        line_gradient.addColorStop(0, "purple");
+        line_gradient.addColorStop(0, current_game.end_at_sec ? "gray" : "purple");
         ctx.fillStyle = line_gradient;
         ctx.fill();
         ctx.beginPath();
@@ -190,15 +181,15 @@ function repeat_tick(game) {
             text(sec.toString(), sec, 0, 0, RULER_TICK_LENGTH);
         }
         let last_alpha = ctx.globalAlpha;
+        let infinite_elapsed_sec = (Date.now() - game.start_at_ms) / 1000;
         for (let evacuator of game.evacuators) {
-            let elapsed_after_evacuate_sec = elapsed_sec - evacuator.sec_at;
+            let elapsed_after_evacuate_sec = infinite_elapsed_sec - evacuator.sec_at;
             let sec = evacuator.sec_at + evacuator.sec_v * elapsed_after_evacuate_sec;
             let mag = evacuator.mag_at + evacuator.mag_v * elapsed_after_evacuate_sec + 0.5 * MAG_GRAVITY * elapsed_after_evacuate_sec * elapsed_after_evacuate_sec;
             ctx.globalAlpha = 1 - Math.min(1, (elapsed_after_evacuate_sec / EVACUATOR_LIFETIME_SEC));
             text(evacuator.name, sec, mag, 0, 0);
         }
         ctx.globalAlpha = last_alpha;
-        // requestAnimationFrame(() => repeat_tick(game));
         setTimeout(() => repeat_tick(game), 1000 / FPS);
     }
 }
