@@ -53,7 +53,11 @@ function end_game(x) {
     }
 }
 function estimate_mag(elapsed_sec) {
-    return Math.pow(elapsed_sec, 2);
+    // return Math.pow(elapsed_sec, 2);
+    let ms = elapsed_sec * 1000;
+    let r = 0.00006;
+    // return Math.floor(100 * Math.pow(Math.E, r * ms));
+    return 100 * Math.pow(Math.E, r * ms);
 }
 let window_width_sec = 1;
 let window_height_mag = 1;
