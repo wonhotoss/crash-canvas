@@ -165,18 +165,13 @@ function repeat_tick(game, anim) {
             ctx.drawImage(offscreen_canvas, game.width / 2, game.height / 2);
         }
         let elapsed_sec = current_game.end_at_sec || (Date.now() - game.start_at_ms) / 1000;
-        ctx.save();
-        ctx.rotate(myradian * Math.PI);
-        ctx.translate(0, 200);
-        ctx.scale(0.75, 0.75);
-        anim.goToAndStop(((elapsed_sec) % anim.getDuration()) * 1000, false /* isFrame */);
-        ctx.restore();
+        // ctx.save();
+        // ctx.rotate(myradian * Math.PI);
+        // ctx.translate(0, 200);
+        // ctx.scale(0.75, 0.75);
+        // anim.goToAndStop(((elapsed_sec) % anim.getDuration()) * 1000, false /* isFrame */);
+        // ctx.restore();
         // ctx.reset();
-        ctx.save();
-        ctx.translate(300, 200);
-        ctx.scale(0.5, 0.5);
-        anim.goToAndStop(((elapsed_sec) % anim.getDuration()) * 1000, false /* isFrame */);
-        ctx.restore();
         // lamp   
         window_width_sec = Math.max(WINDOW_WIDTH_MIN_SEC, elapsed_sec);
         window_height_mag = Math.max(WINDOW_HEIGHT_MIN_MAG, estimate_mag(window_width_sec));
@@ -234,6 +229,28 @@ function repeat_tick(game, anim) {
         ctx.arc(tip.x, tip.y, 25, 0, 2 * Math.PI);
         ctx.fillStyle = 'white';
         ctx.fill();
+        let last_two_points = points.slice(-2);
+        let rad = Math.PI * 0.25;
+        if (last_two_points.length == 2) {
+            // console.log(111);
+            let delta = { x: last_two_points[1].x - last_two_points[0].x, y: last_two_points[1].y - last_two_points[0].y };
+            let tangent = Math.atan2(-delta.y, delta.x);
+            // console.log(angle0);
+            rad -= tangent;
+        }
+        ctx.save();
+        let scale_x = 0.5;
+        let scale_y = 0.5;
+        let w = anim.animationData.w;
+        let h = anim.animationData.h;
+        // ctx.translate(game.width / 2, game.height / 2); 
+        ctx.translate(tip.x, tip.y);
+        let offset = rotateVector({ x: -w * scale_x / 2, y: -h * scale_y / 2 }, rad);
+        ctx.translate(offset.x, offset.y);
+        ctx.rotate(rad);
+        ctx.scale(scale_x, scale_y);
+        anim.goToAndStop(((elapsed_sec) % anim.getDuration()) * 1000, false /* isFrame */);
+        ctx.restore();
         // ruler
         ctx.font = "10px serif";
         ctx.textBaseline = 'middle';
@@ -269,3 +286,9 @@ function repeat_tick(game, anim) {
 let offscreen_canvas = undefined;
 let myradian = 0;
 start_game(document.getElementById("main-canvas"));
+function rotateVector(xy, rad) {
+    var cos = Math.cos(rad);
+    var sin = Math.sin(rad);
+    return { x: xy.x * cos - xy.y * sin, y: xy.x * sin + xy.y * cos };
+}
+;
