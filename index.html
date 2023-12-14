@@ -12,21 +12,59 @@
       padding: 0;
     }
 
-    body {
-      overflow: hidden;
-    }
+    /* body { */
+      /* overflow: hidden; */
+    /* } */
 
-    #main-canvas {
-      position: absolute;
-      height: 100%;
-      width: 100%;
-    }
+    /* #main-canvas { */
+      /* position: absolute; */
+      /* height: 100%; */
+      /* width: 100%; */
+    /* } */
   </style>
 </head>
 
 <body>
-  <canvas id="main-canvas" width="1280" height="720"></canvas>
-  <script src="index.js"></script>  
+    <!-- <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script>
+    <dotlottie-player src="https://lottie.host/272b60dd-462d-42a3-8ed6-fec4143633d6/X4FxBascRI.json" 
+        renderer="canvas"
+        background="transparent" 
+        speed="1" 
+        style="width: 300px; height: 300px" 
+        direction="1" 
+        mode="normal" 
+        loop 
+        controls 
+        autoplay
+    >
+    </dotlottie-player> -->
+    <script src="lottie.js"></script>
+
+    <canvas id="main-canvas" width="1280" height="720"></canvas>
+    <script src="index.js"></script>  
+    <div id="lottie-here">
+
+    </div>
+
+    <script>
+        function do_lottie(context){
+            lottie.loadAnimation({
+                // container: document.getElementById('lottie-here'), // the dom element that will contain the animation
+                container: null,
+                renderer: 'canvas',
+                loop: true,
+                // autoplay: false,
+                autoplay: true,
+                path: 'https://lottie.host/272b60dd-462d-42a3-8ed6-fec4143633d6/X4FxBascRI.json', // the path to the animation json
+                rendererSettings: {
+                    context: context, // the canvas context
+                    scaleMode: 'noScale',
+                    clearCanvas: false,
+                }
+            });
+
+        }        
+    </script>
 </body>
 
 </html>
