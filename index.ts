@@ -288,6 +288,7 @@ function repeat_tick(game: game, anim: any){
             rad -= tangent;
         }
 
+        // ctx.reset();
         ctx.save();
         let scale_x = 0.5;
         let scale_y = 0.5;
@@ -302,6 +303,38 @@ function repeat_tick(game: game, anim: any){
         ctx.scale(scale_x, scale_y);
         anim.goToAndStop(((elapsed_sec) % anim.getDuration()) * 1000, false /* isFrame */);
         ctx.restore();
+
+        for(let i = 0; i < 3; ++i){
+            ctx.save();
+            // let scale_x = 0.5;
+            // let scale_y = 0.5;
+            // let w = anim.animationData.w;
+            // let h = anim.animationData.h;        
+            // ctx.translate(game.width / 2, game.height / 2); 
+            // ctx.translate(tip.x, tip.y); 
+            
+            // let offset = rotateVector({x: -w * scale_x / 2, y: -h * scale_y / 2}, rad);
+            ctx.translate(100 +  450 * i, 150);
+            ctx.rotate(rad);
+            ctx.scale(scale_x, scale_y);
+            anim.goToAndStop(((elapsed_sec) % anim.getDuration()) * 1000, false /* isFrame */);
+            ctx.restore();
+
+            ctx.save();
+            // let scale_x = 0.5;
+            // let scale_y = 0.5;
+            // let w = anim.animationData.w;
+            // let h = anim.animationData.h;        
+            // ctx.translate(game.width / 2, game.height / 2); 
+            // ctx.translate(tip.x, tip.y); 
+            
+            // let offset = rotateVector({x: -w * scale_x / 2, y: -h * scale_y / 2}, rad);
+            ctx.translate(100 +  450 * i, 300);
+            ctx.rotate(rad);
+            ctx.scale(scale_x, scale_y);
+            anim.goToAndStop(((elapsed_sec) % anim.getDuration()) * 1000, false /* isFrame */);
+            ctx.restore();
+        }
 
         // ruler
         ctx.font = "10px serif";
