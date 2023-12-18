@@ -119,6 +119,7 @@ function start_game(canvas: HTMLCanvasElement){
         }
     });
     console.log(anim);
+    console.log(anim.renderer.elements);
     // console.log(current_game.context.getTransform());
     // console.log(current_game.context.globalCompositeOperation);
     // anim.addEventListener('enterFrame', () => {
@@ -296,6 +297,31 @@ function repeat_tick(game: game, anim: any){
         let h = anim.animationData.h;        
         // ctx.translate(game.width / 2, game.height / 2); 
         ctx.translate(tip.x, tip.y); 
+
+        // console.log(anim.renderer.elements);
+        for(let elem of anim.renderer.elements){
+            // elem.transformCanvas = {
+            //     w: ctx.canvas.width,
+            //     h: ctx.canvas.height,
+            //     sx: 1,
+            //     sy: 1,
+            //     tx: 0,
+            //     ty: 0
+            // }
+            // elem.transformCanvas.w = ctx.canvas.width;
+            // elem.transformCanvas.h = ctx.canvas.height;
+            // elem.transformCanvas.sx = 0;
+            // elem.transformCanvas.sy = 0;
+            // elem.transformCanvas.tx = 0;
+            // elem.transformCanvas.ty = 0;
+            // }
+            elem.__proto__.clearCanvas = function clearCanvas(canvasContext: any) {
+                // canvasContext.clearRect(this.transformCanvas.tx, this.transformCanvas.ty, this.transformCanvas.w * this.transformCanvas.sx, this.transformCanvas.h * this.transformCanvas.sy);
+                console.log('!!');
+                canvasContext.clearRect(0, 0, canvasContext.canvas.width, canvasContext.canvas.height);
+              };
+            // elem.clearCanvas = 
+        }
         
         let offset = rotateVector({x: -w * scale_x / 2, y: -h * scale_y / 2}, rad);
         ctx.translate(offset.x, offset.y);
@@ -391,3 +417,58 @@ function rotateVector(xy: {x: number, y: number}, rad: number){
     var sin = Math.sin(rad);
     return {x: xy.x * cos - xy.y * sin, y: xy.x * sin + xy.y * cos};
 };
+
+/*
+sportsguard 4mm ( 기본 ) 
+sportsguard 4mm - bite 표현
+sportsguard 4mm - 드라큐라 이빨 ( sportsguard 색, 치아색 선택 가능 )
+
+3
+
+sportsguard 5mm 
+sportsguard 5mm  - bite 표현
+sportsguard 5mm - 드라큐라 이빨 ( sportsguard 색, 치아색 선택 가능 )
+
+3
+
+
+splint 2mm ( 기본 ) - 상악
+splint 2mm ( 기본 ) - 하악 
+splint 2mm - 전체 교합 표현 - 상악
+splint 2mm - 전체 교합 표현 - 하악
+splint 2mm - 소구치 - 대구치 ( #4 - #7 ) bite 표현 - 상악
+splint 2mm - 소구치 - 대구치 ( #4 - #7 ) bite 표현 - 하악
+splint 2mm - NTI - 송곳니 - 송곳니 ( # 3 - #3 ) 길이, 블럭 #1 - #1 - 상악만
+splint 2mm - NTI - 송곳니 - 송곳니 ( # 3 - #3 ) 길이, 블럭 #1 - #1 , bite 표현 - 상악만
+splint 2mm - Kois splint - 기본 길이, 블럭 #1 - #1 - 상악만
+splint 2mm - Kois splint - 기본 길이, 블럭 #1 - #1, bite 표현 - 상악만
+splint 2mm - Ferrar - 기본 길이, 블럭 #3 - #3 - 상악만
+splint 2mm - Ferrar - 기본 길이, 블럭 #3 - #3, bite 표현  - 상악만
+splint 2mm - Gelb - 기본 길이 - 하악만
+splint 2mm - Gelb - 소구치 - 대구치 ( #4 - #7 ) bite 표현 - 하악만 
+
+14
+
+
+
+splint 3mm - 상악
+splint 3mm - 하악 
+splint 3mm - 전체 교합 표현 - 상악
+splint 3mm - 전체 교합 표현 - 하악
+splint 3mm - 소구치 - 대구치 ( #4 - #7 ) bite 표현 - 상악
+splint 3mm - 소구치 - 대구치 ( #4 - #7 ) bite 표현 - 하악
+splint 3mm - NTI - 송곳니 - 송곳니 ( # 3 - #3 ) 길이, 블럭 #1 - #1 - 상악만
+splint 3mm - NTI - 송곳니 - 송곳니 ( # 3 - #3 ) 길이, 블럭 #1 - #1 , bite 표현 - 상악만
+splint 3mm - Kois splint - 기본 길이, 블럭 #1 - #1 - 상악만
+splint 3mm - Kois splint - 기본 길이, 블럭 #1 - #1, bite 표현 - 상악만
+splint 3mm - Ferrar - 기본 길이, 블럭 #3 - #3 - 상악만
+splint 3mm - Ferrar - 기본 길이, 블럭 #3 - #3, bite 표현  - 상악만
+splint 3mm - Gelb - 기본 길이 - 하악만
+splint 3mm - Gelb - 소구치 - 대구치 ( #4 - #7 ) bite 표현 - 하악만
+
+14
+
+
+부착물 single / double / bar 는 NTI를 제외한 모든 제품에 적용이 가능합니다. 
+다만 재료가 3D printing인 경우는 추가할 수 없습니다. 
+*/
