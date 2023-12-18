@@ -317,7 +317,7 @@ function repeat_tick(game: game, anim: any){
             // }
             elem.__proto__.clearCanvas = function clearCanvas(canvasContext: any) {
                 // canvasContext.clearRect(this.transformCanvas.tx, this.transformCanvas.ty, this.transformCanvas.w * this.transformCanvas.sx, this.transformCanvas.h * this.transformCanvas.sy);
-                console.log('!!');
+                // console.log('!!');
                 canvasContext.clearRect(0, 0, canvasContext.canvas.width, canvasContext.canvas.height);
               };
             // elem.clearCanvas = 
